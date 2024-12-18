@@ -1,6 +1,8 @@
 {
   "name": "@solo-ui/cli",
-  "version": "0.0.1",
+  "version": "0.0.8",
+  "type": "module",
+  "exports": "./dist/index.js",
   "bin": {
     "solo-ui": "./dist/index.js"
   },

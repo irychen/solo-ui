@@ -4,7 +4,9 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "Node"
   },
   "include": ["src/**/*", "package.json"],
   "exclude": ["node_modules", "dist"]
