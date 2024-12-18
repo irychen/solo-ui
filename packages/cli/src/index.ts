@@ -56,6 +56,15 @@ async function cleanupTemp() {
   }
 }
 
+async function modifyTailwindConfig(configPath: string) {
+  const config = await fsExtra.readFile(configPath, "utf-8");
+  const modifiedConfig = config.replace(
+    /content:\s*\[[^]*?\]/,
+    'content: ["./src/**/*.{js,ts,jsx,tsx}"]'
+  );
+  await fsExtra.writeFile(configPath, modifiedConfig);
+}
+
 program
   .name("solo-ui")
   .description("CLI tool for managing solo-ui components")
@@ -77,19 +86,28 @@ program
 
       await checkComponentDependencies(component);
 
-      const componentPath = path.join(TEMP_DIR, "packages/components", component);
+      const componentPath = path.join(
+        TEMP_DIR,
+        "packages/components",
+        component
+      );
       const targetPath = path.join(process.cwd(), "src/components", component);
 
       if (!(await fsExtra.pathExists(componentPath))) {
-        throw new Error(`Component ${component} not found in solo-ui components`);
+        throw new Error(
+          `Component ${component} not found in solo-ui components`
+        );
       }
 
       await fsExtra.copy(componentPath, targetPath);
       await mergeStyles(componentPath);
 
-      spinner.succeed(`Successfully added ${component} component to src/components/${component}`);
+      spinner.succeed(
+        `Successfully added ${component} component to src/components/${component}`
+      );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       spinner.fail(`Failed to add component: ${errorMessage}`);
     } finally {
       await cleanupTemp();
@@ -103,19 +121,27 @@ program
     const spinner = ora("Initializing solo-ui...").start();
     try {
       await checkProjectConfig();
-      await fsExtra.ensureDir("styles");
-      await fsExtra.ensureDir("components");
+
+      // Ensure src directory structure
+      await fsExtra.ensureDir(path.join(process.cwd(), "src", "styles"));
+      await fsExtra.ensureDir(path.join(process.cwd(), "src", "components"));
 
       const git = simpleGit();
       await git.clone(REPO_URL, TEMP_DIR, ["--depth", "1"]);
 
+      // Copy globals.css to src/styles
       await fsExtra.copy(
         path.join(TEMP_DIR, "packages/components/styles/globals.css"),
-        path.join(process.cwd(), "styles/globals.css")
+        path.join(process.cwd(), "src/styles/globals.css")
       );
 
+      // Copy and modify config files
       await fsExtra.copy(
         path.join(TEMP_DIR, "tailwind.config.js"),
+        path.join(process.cwd(), "tailwind.config.js")
+      );
+
+      await modifyTailwindConfig(
         path.join(process.cwd(), "tailwind.config.js")
       );
 
@@ -124,6 +150,7 @@ program
         path.join(process.cwd(), "postcss.config.js")
       );
 
+      // Update package.json
       const packageJson = await fsExtra.readJson("package.json");
       if (!packageJson.dependencies) packageJson.dependencies = {};
       if (!packageJson.devDependencies) packageJson.devDependencies = {};
@@ -143,7 +170,7 @@ program
         "1. Run 'npm install' or 'pnpm install' to install dependencies"
       );
       console.log(
-        "2. Import 'styles/globals.css' in your main application file"
+        "2. Import 'src/styles/globals.css' in your main application file"
       );
       console.log(
         "3. Start using solo-ui components with 'solo-ui add <component>'"
@@ -171,7 +198,8 @@ program
       const items = await fsExtra.readdir(componentsDir);
       const components = items.filter((name) => {
         if (name.startsWith(".")) return false;
-        if (["styles", "package.json", "node_modules"].includes(name)) return false;
+        if (["styles", "package.json", "node_modules"].includes(name))
+          return false;
         return fsExtra.statSync(path.join(componentsDir, name)).isDirectory();
       });
 
@@ -191,14 +219,25 @@ program
 
       if (component) {
         await fsExtra.ensureDir(path.join(process.cwd(), "src/components"));
-        const componentPath = path.join(TEMP_DIR, "packages/components", component);
-        const targetPath = path.join(process.cwd(), "src/components", component);
+        const componentPath = path.join(
+          TEMP_DIR,
+          "packages/components",
+          component
+        );
+        const targetPath = path.join(
+          process.cwd(),
+          "src/components",
+          component
+        );
         await fsExtra.copy(componentPath, targetPath);
         await mergeStyles(componentPath);
-        spinner.succeed(`Successfully added ${component} component to src/components/${component}`);
+        spinner.succeed(
+          `Successfully added ${component} component to src/components/${component}`
+        );
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       spinner.fail(`Failed to fetch components: ${errorMessage}`);
     } finally {
       await cleanupTemp();
