@@ -27,7 +27,13 @@ npx tailwindcss init -p
 pnpm install @solo-ui/cli@latest
 ```
 
-3. add components
+3. initialize the project
+
+```bash
+npx @solo-ui/cli init
+```
+
+4. add components
 
 ```bash
 npx @solo-ui/cli add button
