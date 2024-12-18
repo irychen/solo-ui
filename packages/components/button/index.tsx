@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ButtonProps } from "./types";
+import "./style.css";
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "md", ...props }, ref) => {
